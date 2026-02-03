@@ -91,6 +91,12 @@ igpost owned-pages --business-id <BUSINESS_ID>
 
 Profiles store non-secret values in `~/.config/igpostercli/config.json`, while access tokens are stored in the OS keychain.
 
+Resolution order:
+
+1. CLI flags (e.g. `--user-id`, `--page-id`, `--business-id`)
+2. Selected profile (`--profile` or `IG_PROFILE`)
+3. Environment variables / `.env`
+
 ```bash
 igpost profile set brand-a --access-token "<token>" --user-id <IG_USER_ID> --page-id <PAGE_ID> --business-id <BUSINESS_ID>
 igpost profile show brand-a

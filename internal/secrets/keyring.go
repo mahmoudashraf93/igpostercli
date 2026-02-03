@@ -3,6 +3,7 @@ package secrets
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/99designs/keyring"
 )
@@ -11,9 +12,16 @@ const (
 	serviceName = "igpostercli"
 )
 
-var errTokenNotFound = errors.New("access token not found")
+var (
+	errTokenNotFound = errors.New("access token not found")
+	openKeyring      = openKeyringDefault
+)
 
 func OpenKeyring() (keyring.Keyring, error) {
+	return openKeyring()
+}
+
+func openKeyringDefault() (keyring.Keyring, error) {
 	kr, err := keyring.Open(keyring.Config{
 		ServiceName: serviceName,
 		AllowedBackends: []keyring.BackendType{
@@ -79,7 +87,7 @@ func DeleteAccessToken(profile string) (bool, error) {
 	}
 
 	if err := kr.Remove(tokenKey(profile)); err != nil {
-		if errors.Is(err, keyring.ErrKeyNotFound) {
+		if errors.Is(err, keyring.ErrKeyNotFound) || os.IsNotExist(err) {
 			return false, errTokenNotFound
 		}
 
@@ -91,4 +99,14 @@ func DeleteAccessToken(profile string) (bool, error) {
 
 func ErrTokenNotFound() error {
 	return errTokenNotFound
+}
+
+// SetOpenKeyringForTests overrides keyring opener in tests.
+func SetOpenKeyringForTests(fn func() (keyring.Keyring, error)) func() {
+	prev := openKeyring
+	openKeyring = fn
+
+	return func() {
+		openKeyring = prev
+	}
 }
